@@ -1296,9 +1296,10 @@ def create_task_vip_test():
 
 @app.route('/pws/lm/train', methods = ['POST'])
 def create_task_lm_train():
-
-    #if not request.json:
-    #    abort(400)
+    #if not request.json: #debug 28032016
+    #    abort(400) #debug 28032016
+    if not request.get_json(force=True, silent=True): #debug 28032016
+        abort(400) #debug 28032016
 
     variables, datapoints, predictionFeature, target_variable_values, parameters = getJsonContentsTrain(request.json)
     encoded = lm(datapoints, target_variable_values)
@@ -1311,6 +1312,7 @@ def create_task_lm_train():
         "independentFeatures": variables, 
         "predictedFeatures": [predictedString] 
     }
+    task = {} #debug 28032016
     jsonOutput = jsonify( task )
     #xx = open("lmResponse", "w")
     #xx.writelines(str(encoded))
