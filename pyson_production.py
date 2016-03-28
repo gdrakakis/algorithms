@@ -1297,8 +1297,8 @@ def create_task_vip_test():
 @app.route('/pws/lm/train', methods = ['POST'])
 def create_task_lm_train():
 
-    if not request.json:
-        abort(400)
+    #if not request.json:
+    #    abort(400)
 
     variables, datapoints, predictionFeature, target_variable_values, parameters = getJsonContentsTrain(request.json)
     encoded = lm(datapoints, target_variable_values)
