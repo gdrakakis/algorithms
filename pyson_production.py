@@ -1307,7 +1307,7 @@ def create_task_lm_train():
     #if not request.get_json(force=True, silent=True): #debug 28032016
     #    abort(400) #debug 28032016
 
-    data = request.stream.read()
+    data = request.get_data()
     if not data:
         abort(500)
     print data 
