@@ -1225,6 +1225,10 @@ def changeDicVal (dic):
 ########################################################
 ########################################################
 
+@app.errorhandler(500)
+def not_found(error):
+    return make_response(jsonify( { 'error': 'This is it' } ), 500)
+
 @app.errorhandler(400)
 def not_found(error):
     return make_response(jsonify( { 'error': 'Bad request' } ), 400)
@@ -1296,14 +1300,18 @@ def create_task_vip_test():
 
 @app.route('/pws/lm/train', methods = ['POST'])
 def create_task_lm_train():
-    #if not request.json: #debug 28032016
-    #    abort(400) #debug 28032016
+    #if not request.json: # original
+    #    abort(400)       # original 
+    # variables, datapoints, predictionFeature, target_variable_values, parameters = getJsonContentsTrain(request.json) # original
+
     #if not request.get_json(force=True, silent=True): #debug 28032016
     #    abort(400) #debug 28032016
 
-    #request.get_data()
+    data = request.stream.read()
+    if not data:
+        abort(500)
     variables, datapoints, predictionFeature, target_variable_values, parameters = getJsonContentsTrain(request.get_json(force=True, silent=True)) 
-    #variables, datapoints, predictionFeature, target_variable_values, parameters = getJsonContentsTrain(request.json)
+
     encoded = lm(datapoints, target_variable_values)
 	
     predictedString = predictionFeature + " predicted"
@@ -1314,7 +1322,7 @@ def create_task_lm_train():
         "independentFeatures": variables, 
         "predictedFeatures": [predictedString] 
     }
-    task = {} #debug 28032016
+    #task = {} #debug 28032016
     jsonOutput = jsonify( task )
     #xx = open("lmResponse", "w")
     #xx.writelines(str(encoded))
