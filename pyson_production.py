@@ -1310,6 +1310,7 @@ def create_task_lm_train():
     data = request.stream.read()
     if not data:
         abort(500)
+    print data 
     variables, datapoints, predictionFeature, target_variable_values, parameters = getJsonContentsTrain(request.get_json(force=True, silent=True)) 
 
     encoded = lm(datapoints, target_variable_values)
