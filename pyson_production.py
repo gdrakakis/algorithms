@@ -23,7 +23,7 @@ from sklearn import cross_validation
 from sklearn.naive_bayes import GaussianNB, MultinomialNB, BernoulliNB
 
 app = Flask(__name__, static_url_path = "")
-app.wsgi_app = HTTPMethodOverrideMiddleware(app.wsgi_app) ## edit 29032016
+
 
 def getJsonContentsTrain (jsonInput):
     try:
@@ -1709,8 +1709,32 @@ def create_task_bnb_test():
     #xx.close()
     return jsonOutput, 201 
 
-	
+class HTTPMethodOverrideMiddleware(object): ## edit 29032016
+    allowed_methods = frozenset([
+        'GET',
+        'HEAD',
+        'POST',
+        'DELETE',
+        'PUT',
+        'PATCH',
+        'OPTIONS'
+    ])
+    bodyless_methods = frozenset(['GET', 'HEAD', 'OPTIONS', 'DELETE'])
+
+    def __init__(self, app):
+        self.app = app
+
+    def __call__(self, environ, start_response):
+        method = environ.get('HTTP_X_HTTP_METHOD_OVERRIDE', '').upper()
+        if method in self.allowed_methods:
+            method = method.encode('ascii', 'replace')
+            environ['REQUEST_METHOD'] = method
+        if method in self.bodyless_methods:
+            environ['CONTENT_LENGTH'] = '0'
+        return self.app(environ, start_response)
+
 if __name__ == '__main__': 
+    app.wsgi_app = HTTPMethodOverrideMiddleware(app.wsgi_app) ## edit 29032016
     app.run(host="0.0.0.0", port = 5000, debug = True)	
 
 #curl -i -H "Content-Type: application/json" -X POST -d @C:/Python27/Flask-0.10.1/python-api/vipbugtrain.json http://localhost:5000/pws/vip/train
