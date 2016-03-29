@@ -1253,7 +1253,8 @@ def create_task_vip_train():
     readThis = readThis.replace('\\"','"')
     readThis = readThis.replace('"{','{')
     readThis = readThis.replace('}"','}')
-    print readThis ##########
+    readThis = json.loads(readThis)
+    print "\n\n\n\n\n", readThis["dataset"], "\n\n\n\n\n" ##########
     variables, datapoints, predictionFeature, target_variable_values, parameters = getJsonContentsTrain(readThis)
     latent_variables = parameters.get("latentVariables", None)
 	
