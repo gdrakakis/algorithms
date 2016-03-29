@@ -1303,7 +1303,8 @@ def create_task_vip_test():
 def create_task_lm_train():
     if not request.json: # original
         abort(400)       # original 
-     variables, datapoints, predictionFeature, target_variable_values, parameters = getJsonContentsTrain(request.json) # original
+
+    variables, datapoints, predictionFeature, target_variable_values, parameters = getJsonContentsTrain(request.json) # original
 
     ## 1
     #if not request.get_json(force=True, silent=True): #debug 28032016
