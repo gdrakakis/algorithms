@@ -1238,9 +1238,10 @@ def not_found(error):
 def not_found(error):
     return make_response(jsonify( { 'error': 'Not found' } ), 404)
 
-@app.route('/pws/vip/train', methods = ['POST'])
+@app.route('/pws/vip/train', methods = ['POST']) ##
 def create_task_vip_train():
     start_time = time.time()
+
     if not request.json:
         abort(400)
 
@@ -1709,32 +1710,29 @@ def create_task_bnb_test():
     #xx.close()
     return jsonOutput, 201 
 
-class HTTPMethodOverrideMiddleware(object): ## edit 29032016
-    allowed_methods = frozenset([
-        'GET',
-        'HEAD',
-        'POST',
-        'DELETE',
-        'PUT',
-        'PATCH',
-        'OPTIONS'
-    ])
-    bodyless_methods = frozenset(['GET', 'HEAD', 'OPTIONS', 'DELETE'])
+from werkzeug.wsgi import LimitedStream
+
+
+class StreamConsumingMiddleware(object):
 
     def __init__(self, app):
         self.app = app
 
     def __call__(self, environ, start_response):
-        method = environ.get('HTTP_X_HTTP_METHOD_OVERRIDE', '').upper()
-        if method in self.allowed_methods:
-            method = method.encode('ascii', 'replace')
-            environ['REQUEST_METHOD'] = method
-        if method in self.bodyless_methods:
-            environ['CONTENT_LENGTH'] = '0'
-        return self.app(environ, start_response)
+        stream = LimitedStream(environ['wsgi.input'],
+                               int(environ['CONTENT_LENGTH'] or 0))
+        environ['wsgi.input'] = stream
+        app_iter = self.app(environ, start_response)
+        try:
+            stream.exhaust()
+            for event in app_iter:
+                yield event
+        finally:
+            if hasattr(app_iter, 'close'):
+                app_iter.close()
 
 if __name__ == '__main__': 
-    app.wsgi_app = HTTPMethodOverrideMiddleware(app.wsgi_app) ## edit 29032016
+    app.wsgi_app = StreamConsumingMiddleware(app.wsgi_app)
     app.run(host="0.0.0.0", port = 5000, debug = True)	
 
 #curl -i -H "Content-Type: application/json" -X POST -d @C:/Python27/Flask-0.10.1/python-api/vipbugtrain.json http://localhost:5000/pws/vip/train
