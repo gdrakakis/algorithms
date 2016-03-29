@@ -30,7 +30,7 @@ def getJsonContentsTrain (jsonInput):
         dataset = jsonInput["dataset"]
         predictionFeature = jsonInput["predictionFeature"]
         parameters = jsonInput["parameters"]
-
+        print parameters
         datasetURI = dataset.get("datasetURI", None)
         dataEntry = dataset.get("dataEntry", None)
 
@@ -49,7 +49,7 @@ def getJsonContentsTrain (jsonInput):
                     datapoints[i].append(dataEntry[i]["values"].get(j))				
 
         variables.remove(predictionFeature)		
-			
+        print variables
     except(ValueError, KeyError, TypeError):
         print "Error: Please check JSON syntax... \n"
 	
@@ -1249,7 +1249,7 @@ def create_task_vip_train():
     #    abort(400)
     #variables, datapoints, predictionFeature, target_variable_values, parameters = getJsonContentsTrain(request.json)
 
-    variables, datapoints, predictionFeature, target_variable_values, parameters = getJsonContentsTrain(request.environ['body_copy'])
+    variables, datapoints, predictionFeature, target_variable_values, parameters = getJsonContentsTrain(jsonify(request.environ['body_copy']))
     latent_variables = parameters.get("latentVariables", None)
 	
     Xcopy = deepcopy(datapoints) 
