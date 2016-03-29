@@ -1241,7 +1241,7 @@ def not_found(error):
 @app.route('/pws/vip/train', methods = ['POST']) ##
 def create_task_vip_train():
     start_time = time.time()
-    print request.environ['body_copy'] ##########
+    #print request.environ['body_copy'] ##########
     if not request.environ['body_copy']:
         abort(500)
 
@@ -1250,6 +1250,7 @@ def create_task_vip_train():
     #variables, datapoints, predictionFeature, target_variable_values, parameters = getJsonContentsTrain(request.json)
     myTask = request.environ['body_copy']
     readThis = json.dumps(myTask)
+    print readThis ##########
     variables, datapoints, predictionFeature, target_variable_values, parameters = getJsonContentsTrain(readThis)
     latent_variables = parameters.get("latentVariables", None)
 	
