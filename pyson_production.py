@@ -1250,9 +1250,9 @@ def create_task_vip_train():
     #variables, datapoints, predictionFeature, target_variable_values, parameters = getJsonContentsTrain(request.json)
     myTask = request.environ['body_copy']
     readThis = json.dumps(myTask)
-    readThis = readThis.replace.replace('\"','"')
-    readThis = readThis.replace.replace('"{','{')
-    readThis = readThis.replace.replace('"}','}')
+    readThis = readThis.replace('\"','"')
+    readThis = readThis.replace('"{','{')
+    readThis = readThis.replace('"}','}')
     print readThis ##########
     variables, datapoints, predictionFeature, target_variable_values, parameters = getJsonContentsTrain(readThis)
     latent_variables = parameters.get("latentVariables", None)
