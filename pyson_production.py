@@ -1732,7 +1732,8 @@ class WSGICopyBody(object):
             if environ.get('HTTP_TRANSFER_ENCODING','0') == 'chunked':
                 size = int(input.readline(),16)
                 while size > 0:
-                    body += input.read(size+2)
+                    temp = str(input.read(size+2)).strip()
+                    body += temp
                     size = int(input.readline(),16)
         else:
             body = environ['wsgi.input'].read(length)
