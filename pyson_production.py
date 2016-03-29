@@ -23,6 +23,7 @@ from sklearn import cross_validation
 from sklearn.naive_bayes import GaussianNB, MultinomialNB, BernoulliNB
 
 app = Flask(__name__, static_url_path = "")
+app.wsgi_app = HTTPMethodOverrideMiddleware(app.wsgi_app) ## edit 29032016
 
 def getJsonContentsTrain (jsonInput):
     try:
@@ -1300,18 +1301,20 @@ def create_task_vip_test():
 
 @app.route('/pws/lm/train', methods = ['POST'])
 def create_task_lm_train():
-    #if not request.json: # original
-    #    abort(400)       # original 
-    # variables, datapoints, predictionFeature, target_variable_values, parameters = getJsonContentsTrain(request.json) # original
+    if not request.json: # original
+        abort(400)       # original 
+     variables, datapoints, predictionFeature, target_variable_values, parameters = getJsonContentsTrain(request.json) # original
 
+    ## 1
     #if not request.get_json(force=True, silent=True): #debug 28032016
     #    abort(400) #debug 28032016
-
-    data = request.get_data()
-    if not data:
-        abort(500)
-    print data 
-    variables, datapoints, predictionFeature, target_variable_values, parameters = getJsonContentsTrain(request.get_json(force=True, silent=True)) 
+    
+    ## 2
+    #data = request.get_data()
+    #if not data:
+    #    abort(500)
+    #print data 
+    #variables, datapoints, predictionFeature, target_variable_values, parameters = getJsonContentsTrain(request.get_json(force=True, silent=True)) 
 
     encoded = lm(datapoints, target_variable_values)
 	
