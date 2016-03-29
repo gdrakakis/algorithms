@@ -1249,7 +1249,7 @@ def create_task_vip_train():
     #    abort(400)
     #variables, datapoints, predictionFeature, target_variable_values, parameters = getJsonContentsTrain(request.json)
 
-    variables, datapoints, predictionFeature, target_variable_values, parameters = getJsonContentsTrain(request.json)
+    variables, datapoints, predictionFeature, target_variable_values, parameters = getJsonContentsTrain(request.environ['body_copy'])
     latent_variables = parameters.get("latentVariables", None)
 	
     Xcopy = deepcopy(datapoints) 
