@@ -1736,8 +1736,8 @@ class StreamConsumingMiddleware(object):
 
     def __call__(self, environ, start_response):
         print "HERE"
-        stream = LimitedStream(environ['wsgi.input'], 
-                               int(environ['CONTENT_LENGTH'] or 0))
+        stream = LimitedStream(environ['wsgi.input'],  0) # int(environ['CONTENT_LENGTH'] or 0))
+
         print stream
         environ['wsgi.input'] = stream
         app_iter = self.app(environ, start_response)
@@ -1748,6 +1748,7 @@ class StreamConsumingMiddleware(object):
         finally:
             if hasattr(app_iter, 'close'):
                 app_iter.close()
+        return app_iter
 ############################################################
 # plan A
 """
