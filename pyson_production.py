@@ -30,7 +30,7 @@ def getJsonContentsTrain (jsonInput):
         dataset = jsonInput["dataset"]
         predictionFeature = jsonInput["predictionFeature"]
         parameters = jsonInput["parameters"]
-        print parameters
+        #print parameters
         datasetURI = dataset.get("datasetURI", None)
         dataEntry = dataset.get("dataEntry", None)
 
@@ -49,7 +49,7 @@ def getJsonContentsTrain (jsonInput):
                     datapoints[i].append(dataEntry[i]["values"].get(j))				
 
         variables.remove(predictionFeature)		
-        print variables
+        #print variables
     except(ValueError, KeyError, TypeError):
         print "Error: Please check JSON syntax... \n"
 	
@@ -1241,17 +1241,22 @@ def not_found(error):
 @app.route('/pws/vip/train', methods = ['POST']) ##
 def create_task_vip_train():
     start_time = time.time()
-    print "IN\n", request.environ['wsgi.input']
+
     ###original
-    #"""
+    """
     if not request.json:
         abort(400)
     variables, datapoints, predictionFeature, target_variable_values, parameters = getJsonContentsTrain(request.json)
-    #"""
     """
+
+
     if not request.environ['body_copy']:
         abort(500)
-    
+
+    readThis = json.loads(request.environ['body_copy'])
+    variables, datapoints, predictionFeature, target_variable_values, parameters = getJsonContentsTrain(readThis)
+
+    """
     myTask = request.environ['body_copy']
     readThis = json.dumps(myTask)
     readThis = readThis.replace('\\"','"')
@@ -1726,34 +1731,10 @@ def create_task_bnb_test():
     return jsonOutput, 201 
 
 ############################################################
-#plan B
-#"""
-from werkzeug.wsgi import LimitedStream
 
-class StreamConsumingMiddleware(object):
-
-    def __init__(self, app):
-        self.app = app
-
-    def __call__(self, environ, start_response):
-        print "HERE"
-        stream = LimitedStream(environ['wsgi.input'],  0) # int(environ['CONTENT_LENGTH'] or 0))
-
-        print stream
-        environ['wsgi.input'] = stream
-        app_iter = self.app(environ, start_response)
-        try:
-            stream.exhaust()
-            for event in app_iter:
-                yield event
-        finally:
-            if hasattr(app_iter, 'close'):
-                app_iter.close()
-
-#"""
 ############################################################
-# plan A
-"""
+
+#"""
 class WSGICopyBody(object):
     def __init__(self, application):
         self.application = application
@@ -1784,7 +1765,7 @@ class WSGICopyBody(object):
                                     self._sr_callback(start_response))
 
         # Return modified response
-        print app_iter
+        #print app_iter
         return app_iter
 
     def _sr_callback(self, start_response):
@@ -1792,14 +1773,13 @@ class WSGICopyBody(object):
 
             # Call upstream start_response
             start_response(status, headers, exc_info)
-        print callback
+        #print callback
         return callback
-"""
+#"""
 ############################################################
 
 if __name__ == '__main__': 
-    #app.wsgi_app = WSGICopyBody(app.wsgi_app) # plan A
-    app.wsgi_app = StreamConsumingMiddleware(app.wsgi_app) # plan B
+    app.wsgi_app = WSGICopyBody(app.wsgi_app) # plan A
     app.run(host="0.0.0.0", port = 5000, debug = True)	
 
 #curl -i -H "Content-Type: application/json" -X POST -d @C:/Python27/Flask-0.10.1/python-api/vipbugtrain.json http://localhost:5000/pws/vip/train
