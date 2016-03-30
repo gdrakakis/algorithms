@@ -1241,7 +1241,7 @@ def not_found(error):
 @app.route('/pws/vip/train', methods = ['POST']) ##
 def create_task_vip_train():
     start_time = time.time()
-    #print "IN"
+    print "IN"
     ###original
     """
     if not request.json:
