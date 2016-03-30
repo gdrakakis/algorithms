@@ -1735,6 +1735,7 @@ class StreamConsumingMiddleware(object):
         self.app = app
 
     def __call__(self, environ, start_response):
+        print "HERE"
         stream = LimitedStream(environ['wsgi.input'], 
                                int(environ['CONTENT_LENGTH'] or 0))
         print stream
