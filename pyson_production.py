@@ -1243,12 +1243,12 @@ def create_task_vip_train():
     start_time = time.time()
     print "IN"
     ###original
-    """
+    #"""
     if not request.json:
         abort(400)
     variables, datapoints, predictionFeature, target_variable_values, parameters = getJsonContentsTrain(request.json)
-    """
     #"""
+    """
     if not request.environ['body_copy']:
         abort(500)
     
@@ -1259,7 +1259,7 @@ def create_task_vip_train():
     readThis = readThis.replace('}"','}')
     readThis = json.loads(readThis)
     variables, datapoints, predictionFeature, target_variable_values, parameters = getJsonContentsTrain(readThis)
-    #"""
+    """
 
     latent_variables = parameters.get("latentVariables", None)
 	
@@ -1727,7 +1727,7 @@ def create_task_bnb_test():
 
 ############################################################
 #plan B
-"""
+#"""
 from werkzeug.wsgi import LimitedStream
 
 class StreamConsumingMiddleware(object):
@@ -1749,11 +1749,11 @@ class StreamConsumingMiddleware(object):
         finally:
             if hasattr(app_iter, 'close'):
                 app_iter.close()
-        return app_iter
-"""
+
+#"""
 ############################################################
 # plan A
-#"""
+"""
 class WSGICopyBody(object):
     def __init__(self, application):
         self.application = application
@@ -1794,12 +1794,12 @@ class WSGICopyBody(object):
             start_response(status, headers, exc_info)
         print callback
         return callback
-#"""
+"""
 ############################################################
 
 if __name__ == '__main__': 
-    app.wsgi_app = WSGICopyBody(app.wsgi_app) # plan A
-    #app.wsgi_app = StreamConsumingMiddleware(app.wsgi_app) # plan B
+    #app.wsgi_app = WSGICopyBody(app.wsgi_app) # plan A
+    app.wsgi_app = StreamConsumingMiddleware(app.wsgi_app) # plan B
     app.run(host="0.0.0.0", port = 5000, debug = True)	
 
 #curl -i -H "Content-Type: application/json" -X POST -d @C:/Python27/Flask-0.10.1/python-api/vipbugtrain.json http://localhost:5000/pws/vip/train
