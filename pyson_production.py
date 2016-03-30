@@ -24,7 +24,6 @@ from sklearn.naive_bayes import GaussianNB, MultinomialNB, BernoulliNB
 
 app = Flask(__name__, static_url_path = "")
 
-
 def getJsonContentsTrain (jsonInput):
     try:
         dataset = jsonInput["dataset"]
@@ -473,13 +472,20 @@ def best_latent_variable(X, Y, latent_variables, num_instances):
         #r2 = numpy.mean(scores)
 
         #2
-        predY = cross_validation.cross_val_predict( plsca, numpy.array(X), numpy.array(Y), cv=10)
+        #predY = cross_validation.cross_val_predict( plsca, numpy.array(X), numpy.array(Y), cv=10)
+        #r2 = getR2 (Y, predY)
+
+        #3
+        if num_instances <10:
+            predY = cross_validation.cross_val_predict( plsca, numpy.array(X), numpy.array(Y), cv=num_instances)
+        else:
+            predY = cross_validation.cross_val_predict( plsca, numpy.array(X), numpy.array(Y), cv=10)
         r2 = getR2 (Y, predY)
 
         if (r2 > r2_best):
             r2_best = r2
             lv_best = lv
-
+    #print r2_best
     return lv_best
 
 def get_vip (fin_pls, lv_best, current_attribute, attributes_gone, attributes):
@@ -506,7 +512,7 @@ def get_vip (fin_pls, lv_best, current_attribute, attributes_gone, attributes):
         return VIPcurrent[0]
     else:
         return VIPcurrent
-		
+
 #################################a
 def enthread(target, args):
     q = Queue.Queue()
@@ -579,6 +585,7 @@ def plsvip (X, Y, V, lat_var):
         min_vip = min(VIPcurrent)
         min_att = VIPcurrent.index(min_vip)
         """ 
+
         # Working version
         #"""
         for i in range (0,attributes):
@@ -588,6 +595,7 @@ def plsvip (X, Y, V, lat_var):
                 min_att = i
         #"""
         ##########################################r
+
         if min_att >-1:
             attributes_gone.append([V[min_att], round(currentR2,2), attributes, lv_best]) ####### CURRENT : to BE popped, NOT already popped
         V.pop(min_att)
@@ -619,6 +627,7 @@ def bestpls(vipMatrix, X, Y, V):
             lv_best = vipMatrix[entries][3]
 
     #################################################################################################qq
+
     variables = []    
     for i in range (1, position): # not position + 1, as the vipMatrix[position] holds the next variable to be removed
         variables.append(vipMatrix[i][0])
@@ -902,6 +911,7 @@ def getJsonContentsTest (jsonInput):
 
 """
 # end duplicate
+
 def entropy(data, attribute):
     value_frequencies = {}
     data_entropy = 0.0
@@ -1228,7 +1238,7 @@ def changeDicVal (dic):
 
 @app.errorhandler(500)
 def not_found(error):
-    return make_response(jsonify( { 'error': 'This is it' } ), 500)
+    return make_response(jsonify( { 'error': 'Custom Error' } ), 500)
 
 @app.errorhandler(400)
 def not_found(error):
@@ -1302,10 +1312,12 @@ def create_task_vip_train():
 @app.route('/pws/vip/test', methods = ['POST'])
 def create_task_vip_test():
 
-    if not request.json:
-        abort(400)
+    if not request.environ['body_copy']:
+        abort(500)
 
-    variables, datapoints, predictionFeature, rawModel = getJsonContentsTest(request.json)
+    readThis = json.loads(request.environ['body_copy'])
+
+    variables, datapoints, predictionFeature, rawModel = getJsonContentsTest(readThis)
     
     #print "\n\n LIST OF STUFF", len(datapoints), len(datapoints[0]), len(variables), predictionFeature, "\n\n"
     predictionList = plsvip_predict(variables, datapoints, predictionFeature, rawModel)
@@ -1322,10 +1334,13 @@ def create_task_vip_test():
 
 @app.route('/pws/lm/train', methods = ['POST'])
 def create_task_lm_train():
-    if not request.json: # original
-        abort(400)       # original 
 
-    variables, datapoints, predictionFeature, target_variable_values, parameters = getJsonContentsTrain(request.json) # original
+    if not request.environ['body_copy']:
+        abort(500)
+
+    readThis = json.loads(request.environ['body_copy'])
+
+    variables, datapoints, predictionFeature, target_variable_values, parameters = getJsonContentsTrain(readThis) # original
 
     ## 1
     #if not request.get_json(force=True, silent=True): #debug 28032016
@@ -1358,10 +1373,12 @@ def create_task_lm_train():
 @app.route('/pws/lm/test', methods = ['POST'])
 def create_task_lm_test():
 
-    if not request.json:
-        abort(400)
+    if not request.environ['body_copy']:
+        abort(500)
 
-    variables, datapoints, predictionFeature, rawModel = getJsonContentsTest(request.json)
+    readThis = json.loads(request.environ['body_copy'])
+
+    variables, datapoints, predictionFeature, rawModel = getJsonContentsTest(readThis)
     predictionList = lm_test(variables, datapoints, predictionFeature, rawModel)
 	
     task = {
@@ -1376,10 +1393,12 @@ def create_task_lm_test():
 @app.route('/pws/lasso/train', methods = ['POST'])
 def create_task_lasso_train():
 
-    if not request.json:
-        abort(400)
+    if not request.environ['body_copy']:
+        abort(500)
 
-    variables, datapoints, predictionFeature, target_variable_values, parameters = getJsonContentsTrain(request.json)
+    readThis = json.loads(request.environ['body_copy'])
+
+    variables, datapoints, predictionFeature, target_variable_values, parameters = getJsonContentsTrain(readThis)
     alpha = parameters.get("alpha", None)
     if (alpha):
         encoded = lasso(datapoints, target_variable_values, alpha = 0.1)
@@ -1403,10 +1422,12 @@ def create_task_lasso_train():
 @app.route('/pws/lasso/test', methods = ['POST'])
 def create_task_lasso_test():
 
-    if not request.json:
-        abort(400)
+    if not request.environ['body_copy']:
+        abort(500)
 
-    variables, datapoints, predictionFeature, rawModel = getJsonContentsTest(request.json)
+    readThis = json.loads(request.environ['body_copy'])
+
+    variables, datapoints, predictionFeature, rawModel = getJsonContentsTest(readThis)
     predictionList = lasso_test(variables, datapoints, predictionFeature, rawModel)
 	
     task = {
@@ -1418,14 +1439,15 @@ def create_task_lasso_test():
     #xx.close()
     return jsonOutput, 201 
 
-
 @app.route('/pws/id3/train', methods = ['POST'])
 def create_task_id3_train():
 
-    if not request.json:
-        abort(400)
+    if not request.environ['body_copy']:
+        abort(500)
 
-    variables, datapoints, predictionFeature, target_variable_values, parameters = getJsonContentsTrain(request.json)
+    readThis = json.loads(request.environ['body_copy'])
+
+    variables, datapoints, predictionFeature, target_variable_values, parameters = getJsonContentsTrain(readThis)
     logBase = parameters.get("logBase", None)
 	
  
@@ -1489,10 +1511,12 @@ def create_task_id3_train():
 @app.route('/pws/id3/test', methods = ['POST'])
 def create_task_id3_test():
 
-    if not request.json:
-        abort(400)
+    if not request.environ['body_copy']:
+        abort(500)
 
-    variables, datapoints, predictionFeature, rawModel = getJsonContentsTest(request.json)
+    readThis = json.loads(request.environ['body_copy'])
+
+    variables, datapoints, predictionFeature, rawModel = getJsonContentsTest(readThis)
 
     data = []
     for instance in range (len(datapoints)):
@@ -1517,10 +1541,12 @@ def create_task_id3_test():
 @app.route('/pws/mci/train', methods = ['POST']) 
 def create_task_mci_train():
 
-    if not request.json:
-        abort(400)
+    if not request.environ['body_copy']:
+        abort(500)
 
-    variables, datapoints, predictionFeature, target_variable_values, parameters = getJsonContentsTrain(request.json)
+    readThis = json.loads(request.environ['body_copy'])
+
+    variables, datapoints, predictionFeature, target_variable_values, parameters = getJsonContentsTrain(readThis)
     logBase = parameters.get("logBase", None)
     if not (logBase):
         logBase = 10
@@ -1582,10 +1608,12 @@ def create_task_mci_train():
 @app.route('/pws/mci/test', methods = ['POST'])
 def create_task_mci_test():
 
-    if not request.json:
-        abort(400)
+    if not request.environ['body_copy']:
+        abort(500)
 
-    variables, datapoints, predictionFeature, rawModel = getJsonContentsTest(request.json)
+    readThis = json.loads(request.environ['body_copy'])
+
+    variables, datapoints, predictionFeature, rawModel = getJsonContentsTest(readThis)
 
     data = []
     for instance in range (len(datapoints)):
@@ -1606,14 +1634,16 @@ def create_task_mci_test():
     #xx.writelines(str(predictionList))
     #xx.close()
     return jsonOutput, 201 
-	
+
 @app.route('/pws/gnb/train', methods = ['POST'])
 def create_task_gnb_train():
 
-    if not request.json:
-        abort(400)
+    if not request.environ['body_copy']:
+        abort(500)
 
-    variables, datapoints, predictionFeature, target_variable_values, parameters = getJsonContentsTrain(request.json)
+    readThis = json.loads(request.environ['body_copy'])
+
+    variables, datapoints, predictionFeature, target_variable_values, parameters = getJsonContentsTrain(readThis)
     encoded = gnb(datapoints, target_variable_values)
 	
     predictedString = predictionFeature + " predicted"
@@ -1633,10 +1663,12 @@ def create_task_gnb_train():
 @app.route('/pws/gnb/test', methods = ['POST'])
 def create_task_gnb_test():
 
-    if not request.json:
-        abort(400)
+    if not request.environ['body_copy']:
+        abort(500)
 
-    variables, datapoints, predictionFeature, rawModel = getJsonContentsTest(request.json)
+    readThis = json.loads(request.environ['body_copy'])
+
+    variables, datapoints, predictionFeature, rawModel = getJsonContentsTest(readThis)
     predictionList = gnb_test(variables, datapoints, predictionFeature, rawModel)
 	
     task = {
@@ -1651,10 +1683,12 @@ def create_task_gnb_test():
 @app.route('/pws/mnb/train', methods = ['POST'])
 def create_task_mnb_train():
 
-    if not request.json:
-        abort(400)
+    if not request.environ['body_copy']:
+        abort(500)
 
-    variables, datapoints, predictionFeature, target_variable_values, parameters = getJsonContentsTrain(request.json)
+    readThis = json.loads(request.environ['body_copy'])
+
+    variables, datapoints, predictionFeature, target_variable_values, parameters = getJsonContentsTrain(readThis)
     encoded = mnb(datapoints, target_variable_values)
 	
     predictedString = predictionFeature + " predicted"
@@ -1674,10 +1708,12 @@ def create_task_mnb_train():
 @app.route('/pws/mnb/test', methods = ['POST'])
 def create_task_mnb_test():
 
-    if not request.json:
-        abort(400)
+    if not request.environ['body_copy']:
+        abort(500)
 
-    variables, datapoints, predictionFeature, rawModel = getJsonContentsTest(request.json)
+    readThis = json.loads(request.environ['body_copy'])
+
+    variables, datapoints, predictionFeature, rawModel = getJsonContentsTest(readThis)
     predictionList = mnb_test(variables, datapoints, predictionFeature, rawModel)
 	
     task = {
@@ -1692,10 +1728,12 @@ def create_task_mnb_test():
 @app.route('/pws/bnb/train', methods = ['POST'])
 def create_task_bnb_train():
 
-    if not request.json:
-        abort(400)
+    if not request.environ['body_copy']:
+        abort(500)
 
-    variables, datapoints, predictionFeature, target_variable_values, parameters = getJsonContentsTrain(request.json)
+    readThis = json.loads(request.environ['body_copy'])
+
+    variables, datapoints, predictionFeature, target_variable_values, parameters = getJsonContentsTrain(readThis)
     encoded = bnb(datapoints, target_variable_values)
 	
     predictedString = predictionFeature + " predicted"
@@ -1715,10 +1753,12 @@ def create_task_bnb_train():
 @app.route('/pws/bnb/test', methods = ['POST'])
 def create_task_bnb_test():
 
-    if not request.json:
-        abort(400)
+    if not request.environ['body_copy']:
+        abort(500)
 
-    variables, datapoints, predictionFeature, rawModel = getJsonContentsTest(request.json)
+    readThis = json.loads(request.environ['body_copy'])
+
+    variables, datapoints, predictionFeature, rawModel = getJsonContentsTest(readThis)
     predictionList = bnb_test(variables, datapoints, predictionFeature, rawModel)
 	
     task = {
@@ -1731,10 +1771,8 @@ def create_task_bnb_test():
     return jsonOutput, 201 
 
 ############################################################
-
 ############################################################
 
-#"""
 class WSGICopyBody(object):
     def __init__(self, application):
         self.application = application
@@ -1775,11 +1813,11 @@ class WSGICopyBody(object):
             start_response(status, headers, exc_info)
         #print callback
         return callback
-#"""
+
 ############################################################
 
 if __name__ == '__main__': 
-    app.wsgi_app = WSGICopyBody(app.wsgi_app) # plan A
+    app.wsgi_app = WSGICopyBody(app.wsgi_app) ##
     app.run(host="0.0.0.0", port = 5000, debug = True)	
 
 #curl -i -H "Content-Type: application/json" -X POST -d @C:/Python27/Flask-0.10.1/python-api/vipbugtrain.json http://localhost:5000/pws/vip/train
