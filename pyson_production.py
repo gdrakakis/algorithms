@@ -1277,7 +1277,10 @@ def create_task_vip_train():
     """
 
     latent_variables = parameters.get("latentVariables", None)
-	
+
+    if not latent_variables or latent_variables>=variables:
+        latent_variables = len(variables) - 1
+
     Xcopy = deepcopy(datapoints) 
     Ycopy = deepcopy(target_variable_values) 
     Vcopy = deepcopy(variables) 
