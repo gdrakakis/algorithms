@@ -1458,6 +1458,8 @@ def create_task_id3_train():
         bin_width = 3.5*(numpy.std(target_variable_values))*(numpy.power(len(target_variable_values), -0.3))
         num_bins = math.ceil(max(target_variable_values) - min(target_variable_values)/bin_width)
         num_bins = int(round(num_bins))
+        if num_bins <2:
+            num_bins = 2
 		
         bin_values = []
         bin_diff = (max(target_variable_values) - min(target_variable_values)) / num_bins
@@ -1557,7 +1559,9 @@ def create_task_mci_train():
         bin_width = 3.5*(numpy.std(target_variable_values))*(numpy.power(len(target_variable_values), -0.3)) #Scott
         num_bins = math.ceil(max(target_variable_values) - min(target_variable_values)/bin_width)
         num_bins = int(round(num_bins))
-		
+        if num_bins <2:
+            num_bins = 2
+			
         bin_values = []
         bin_diff = (max(target_variable_values) - min(target_variable_values)) / num_bins
         
