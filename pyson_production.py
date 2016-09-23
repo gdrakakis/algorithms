@@ -434,26 +434,32 @@ def best_latent_variable(X, Y, latent_variables, num_instances):
 
 #BEGIN PLS
 def getR2 (Y, predY):
-    R2 = sklearn.metrics.r2_score(Y, predY)
-    """
+    #R2 = sklearn.metrics.r2_score(Y, predY)
+    #"""
     meanY4r2 = numpy.mean(Y)
     meanYpred4r2 = numpy.mean(predY)
 
-    SSXX = 0
-    SSYY = 0
-    SSXY = 0
+    R2 = 0
+    SSres = 0
+    SStot = 0
+    SSreg = 0
     for i in range (len(Y)):
-        SSXX += numpy.power ((Y[i] - meanY4r2), 2)
-        SSYY += numpy.power ((predY[i] - meanYpred4r2), 2) 
-        SSXY += (Y[i] - meanY4r2)*(predY[i] - meanYpred4r2)
-    
-    if SSXX ==0 or SSYY ==0:
-        R2wolfram = 0
-    else:
-        R2wolfram = numpy.power(SSXY, 2)/(SSXX*SSYY)
+        SSreg += numpy.power ((predY[i] - meanY4r2), 2)
+        SSres += numpy.power ((Y[i] - predY[i]), 2)
+        SStot += numpy.power ((Y[i] - meanY4r2), 2)
 
-    return R2wolfram
-    """
+    if SStot !=0:
+        R2 = 1 - (SSres/SStot)
+        #R2_v2 = SSreg/SStot
+    else: 
+        if SSres !=0:
+            R2 = 0
+        else:
+            R2 = 1
+
+    if R2<0:
+        R2 = 0
+    #"""
     return R2
 
 def best_latent_variable(X, Y, latent_variables, num_instances):
@@ -1277,7 +1283,7 @@ def create_task_vip_train():
     """
 
     latent_variables = parameters.get("latentVariables", None)
-
+    latent_variables = int(latent_variables)
     if not latent_variables or latent_variables>=variables:
         latent_variables = len(variables) - 1
 
