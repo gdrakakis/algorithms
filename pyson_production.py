@@ -451,14 +451,18 @@ def getR2 (Y, predY):
     if SStot !=0:
         R2 = 1 - (SSres/SStot)
         #R2_v2 = SSreg/SStot
+        #print SSreg, SSres, SStot, "in" #### test
     else: 
         if SSres !=0:
             R2 = 0
+            #print SSreg, SSres, SStot, "out" #### test
         else:
             R2 = 1
 
     if R2<0:
         R2 = 0
+    R2 =  float(R2) #### test
+    #print R2, SSres, SSreg, SStot #### test
     #"""
     return R2
 
@@ -483,15 +487,20 @@ def best_latent_variable(X, Y, latent_variables, num_instances):
 
         #3
         if num_instances <10:
-            predY = cross_validation.cross_val_predict( plsca, numpy.array(X), numpy.array(Y), cv=num_instances)
+            #predY = cross_validation.cross_val_predict( plsca, numpy.array(X), numpy.array(Y), cv=num_instances) #### was
+            predY = cross_validation.cross_val_predict( plsca, numpy.array(X), numpy.array(Y), cv=num_instances) #### test
         else:
-            predY = cross_validation.cross_val_predict( plsca, numpy.array(X), numpy.array(Y), cv=10)
-        r2 = getR2 (Y, predY)
+            #predY = cross_validation.cross_val_predict( plsca, numpy.array(X), numpy.array(Y), cv=10) #### was
+            predY = cross_validation.cross_val_predict( plsca, numpy.array(X), numpy.array(Y), cv=10) #### test
+        predY = predY.flatten()
+   
+        r2 = getR2(Y, predY)   
 
         if (r2 > r2_best):
             r2_best = r2
             lv_best = lv
-    #print r2_best
+
+    #print r2_best, lv_best, "\n" #### test
     return lv_best
 
 def get_vip (fin_pls, lv_best, current_attribute, attributes_gone, attributes):
@@ -570,6 +579,7 @@ def plsvip (X, Y, V, lat_var):
 
         #print Y[0], predY[0]
         currentR2 = getR2 (Y, predY)
+        #print currentR2, "damn" #### test
         #print "R2 ", currentR2, "Avg", numpy.mean(Y), "Pred", numpy.mean(predY), "Attr", attributes, "Lat", lv_best
 
         min_vip = 1000
@@ -624,7 +634,7 @@ def bestpls(vipMatrix, X, Y, V):
     bestR2 = vipMatrix[0][1]
     lv_best = vipMatrix[0][3]
     position = 0
-
+    print bestR2, lv_best, "YOLO" #### test
     for entries in range (len(vipMatrix)):
 
         if vipMatrix[entries][1] > bestR2:   
@@ -742,7 +752,7 @@ def lm_test (variables, datapoints, predictionFeature, rawModel):
     clf2 = pickle.loads(decoded)
     predictionList = []
     for i in range (len(datapoints)):
-        temp = clf2.predict(datapoints[i])
+        temp = clf2.predict([datapoints[i]]) ##[]
         finalPrediction = {predictionFeature:temp[0]}
         predictionList.append(finalPrediction)
     return predictionList
@@ -766,7 +776,8 @@ def gnb_test (variables, datapoints, predictionFeature, rawModel):
     gnb2 = pickle.loads(decoded)
     predictionList = []
     for i in range (len(datapoints)):
-        temp = gnb2.predict(datapoints[i])
+        ## temp = gnb2.predict(datapoints[i]) #R
+        temp = gnb2.predict([datapoints[i]]) ##[]
         if isinstance (temp,str):
             finalPrediction = {predictionFeature:temp}
         else:
@@ -794,7 +805,7 @@ def mnb_test (variables, datapoints, predictionFeature, rawModel):
     mnb2 = pickle.loads(decoded)
     predictionList = []
     for i in range (len(datapoints)):
-        temp = mnb2.predict(datapoints[i])
+        temp = mnb2.predict([datapoints[i]]) ##[]
         if isinstance (temp,str):
             finalPrediction = {predictionFeature:temp}
         else:
@@ -822,7 +833,7 @@ def bnb_test (variables, datapoints, predictionFeature, rawModel):
     bnb2 = pickle.loads(decoded)
     predictionList = []
     for i in range (len(datapoints)):
-        temp = bnb2.predict(datapoints[i])
+        temp = bnb2.predict([datapoints[i]]) ##[]
         if isinstance (temp,str):
             finalPrediction = {predictionFeature:temp}
         else:
@@ -850,7 +861,7 @@ def lasso_test (variables, datapoints, predictionFeature, rawModel):
     clf2 = pickle.loads(decoded)
     predictionList = []
     for i in range (len(datapoints)):
-        temp = clf2.predict(datapoints[i])
+        temp = clf2.predict([datapoints[i]]) ##[]
         finalPrediction = {predictionFeature:temp[0]}
         predictionList.append(finalPrediction)
     return predictionList
@@ -1794,18 +1805,28 @@ class WSGICopyBody(object):
         from cStringIO import StringIO
         input = environ.get('wsgi.input')
         length = environ.get('CONTENT_LENGTH', '0')
+
         length = 0 if length == '' else int(length)
+
         body = ''
         if length == 0:
             environ['body_copy'] = ''
             if input is None:
                 return
+
             if environ.get('HTTP_TRANSFER_ENCODING','0') == 'chunked':
-                size = int(input.readline(),16)
-                while size > 0:
-                    temp = str(input.read(size+2)).strip()
-                    body += temp
-                    size = int(input.readline(),16)
+                while (1):
+                    temp = input.readline() ## 
+                    
+                    if not temp:
+                        break
+                    body +=temp
+            size = len(body)
+            #if environ.get('HTTP_TRANSFER_ENCODING','0') == 'chunked':
+            #    body = input.readline() ## 
+            #    print "\n\n\n\nBODY\n\n\n\n", body
+            #    size = len(body)
+                
         else:
             body = environ['wsgi.input'].read(length)
         environ['body_copy'] = body
@@ -1833,4 +1854,5 @@ if __name__ == '__main__':
     app.wsgi_app = WSGICopyBody(app.wsgi_app) ##
     app.run(host="0.0.0.0", port = 5000, debug = True)	
 
-#curl -i -H "Content-Type: application/json" -X POST -d @C:/Python27/Flask-0.10.1/python-api/vipbugtrain.json http://localhost:5000/pws/vip/train
+## curl -i -H "Transfer-encoding:chunked" -H "Content-Type:application/json" -X POST -d @C:/Python27-15/trainCategorical.json http://localhost:5000/pws/gnb/train
+# curl -i -H "Transfer-encoding:chunked" -H "Content-Type:application/json" -X POST -d @C:/Python27-15/trainCategorical.json http://192.168.99.100:5000/pws/gnb/train
